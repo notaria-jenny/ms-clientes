@@ -4,6 +4,7 @@ import notaria.jenny.ms_clientes.model.Clientes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import notaria.jenny.ms_clientes.repository.ClientesRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
