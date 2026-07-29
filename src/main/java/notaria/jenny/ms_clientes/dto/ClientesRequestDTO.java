@@ -2,6 +2,7 @@ package notaria.jenny.ms_clientes.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import notaria.jenny.ms_clientes.validation.RutValido;
 
 import java.time.LocalDate;
 
@@ -14,6 +15,7 @@ public class ClientesRequestDTO {
 
     @NotBlank
     @Size(max = 12)
+    @RutValido
     private String rut;
 
     @NotBlank
