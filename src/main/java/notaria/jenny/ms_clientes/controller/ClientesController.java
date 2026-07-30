@@ -2,6 +2,7 @@ package notaria.jenny.ms_clientes.controller;
 
 import notaria.jenny.ms_clientes.dto.ClientesRequestDTO;
 import notaria.jenny.ms_clientes.dto.ClientesResponseDTO;
+import notaria.jenny.ms_clientes.dto.ClientesUpdateDTO;
 import notaria.jenny.ms_clientes.service.ClientesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -61,7 +62,7 @@ public class ClientesController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<ClientesResponseDTO> actualizar(@PathVariable Long id,
-                                                          @Valid @RequestBody ClientesRequestDTO request) {
+                                                          @Valid @RequestBody ClientesUpdateDTO request) {
         ClientesResponseDTO response = service.actualizar(id, request);
         agregarLinks(response);
         return ResponseEntity.ok(response);

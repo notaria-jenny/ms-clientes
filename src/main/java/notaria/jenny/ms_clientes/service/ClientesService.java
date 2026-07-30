@@ -2,6 +2,7 @@ package notaria.jenny.ms_clientes.service;
 
 import notaria.jenny.ms_clientes.dto.ClientesRequestDTO;
 import notaria.jenny.ms_clientes.dto.ClientesResponseDTO;
+import notaria.jenny.ms_clientes.dto.ClientesUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,7 +12,7 @@ import java.util.List;
 public interface ClientesService {
 
     ClientesResponseDTO crear(ClientesRequestDTO request);
-    ClientesResponseDTO actualizar(Long id, ClientesRequestDTO request);
+    ClientesResponseDTO actualizar(Long id, ClientesUpdateDTO request);
     void toggleActivo(Long id);
 
     ClientesResponseDTO buscarPorId(Long id);

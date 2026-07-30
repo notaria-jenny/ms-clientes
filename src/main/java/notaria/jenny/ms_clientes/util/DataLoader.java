@@ -60,7 +60,7 @@ public class DataLoader implements CommandLineRunner {
         String rut;
         do{
 
-            int numero = random.nextInt(20000000-50000000) + 5000000;
+            int numero = random.nextInt(20000000-5000000) + 5000000;
             rut = numero + "-" + RutUtil.calcularDv(numero);
 
         } while (!usados.add(rut));

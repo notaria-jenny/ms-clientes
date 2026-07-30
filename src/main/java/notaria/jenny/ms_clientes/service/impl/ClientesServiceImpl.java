@@ -2,6 +2,7 @@ package notaria.jenny.ms_clientes.service.impl;
 
 import notaria.jenny.ms_clientes.dto.ClientesRequestDTO;
 import notaria.jenny.ms_clientes.dto.ClientesResponseDTO;
+import notaria.jenny.ms_clientes.dto.ClientesUpdateDTO;
 import notaria.jenny.ms_clientes.exception.RecursoDuplicadoException;
 import notaria.jenny.ms_clientes.exception.RecursoNoEncontradoException;
 import notaria.jenny.ms_clientes.model.Clientes;
@@ -55,13 +56,11 @@ public class ClientesServiceImpl implements ClientesService {
     @Transactional
     public ClientesResponseDTO actualizar(
             Long id,
-            ClientesRequestDTO request
+            ClientesUpdateDTO request
     ) {
         Clientes cliente = ClientesRepository
                 .findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con ID " + id + " no encontrado"));
-
-        String rutNormalizado = RutUtil.normalizar(request.getRut());
 
         boolean emailCambiado = !cliente
                 .getEmail()
@@ -69,14 +68,7 @@ public class ClientesServiceImpl implements ClientesService {
         if (emailCambiado && ClientesRepository.existsByEmail(request.getEmail()))
             throw new RecursoDuplicadoException("El email '" + request.getEmail() + "' ya está en uso por otro cliente");
 
-        boolean rutCambiado = !cliente
-                .getRut()
-                .equalsIgnoreCase(rutNormalizado);
-        if (rutCambiado && ClientesRepository.existsByRut(rutNormalizado))
-            throw new RecursoDuplicadoException("El RUT '" + rutNormalizado + "' ya está en uso por otro cliente");
-
         cliente.setNombreCompleto(request.getNombreCompleto());
-        cliente.setRut(rutNormalizado);
         cliente.setEmail(request.getEmail());
         cliente.setTelefono(request.getTelefono());
         cliente.setDireccion(request.getDireccion());
