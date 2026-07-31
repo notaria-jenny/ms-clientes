@@ -13,7 +13,7 @@ public class SecurityConfig {
 
     /**
      * DEUDA TÉCNICA: hoy toda la API está abierta (permitAll) para desarrollo.
-     * Antes de producción: autenticación JWT centralizada en el API Gateway.
+     * Antes de produccion: autenticación JWT centralizada en el API Gateway.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
