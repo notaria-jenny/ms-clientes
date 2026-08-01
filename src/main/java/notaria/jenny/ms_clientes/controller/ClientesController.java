@@ -34,7 +34,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 )
 public class ClientesController {
 
-    private final ClientesService service;
+    private final ClientesService clientesService;
 
     // ──────────────────────────────────────────────
     // CRUD
@@ -48,7 +48,7 @@ public class ClientesController {
     })
     @PostMapping
     public ResponseEntity<ClientesResponseDTO> crear(@Valid @RequestBody ClientesRequestDTO request) {
-        ClientesResponseDTO response = service.crear(request);
+        ClientesResponseDTO response = clientesService.crear(request);
         agregarLinks(response);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -63,7 +63,7 @@ public class ClientesController {
     @PutMapping("/{id}")
     public ResponseEntity<ClientesResponseDTO> actualizar(@PathVariable Long id,
                                                           @Valid @RequestBody ClientesUpdateDTO request) {
-        ClientesResponseDTO response = service.actualizar(id, request);
+        ClientesResponseDTO response = clientesService.actualizar(id, request);
         agregarLinks(response);
         return ResponseEntity.ok(response);
     }
@@ -75,7 +75,7 @@ public class ClientesController {
     })
     @PatchMapping("/{id}/toggle-activo")
     public ResponseEntity<Void> toggleActivo(@PathVariable Long id) {
-        service.toggleActivo(id);
+        clientesService.toggleActivo(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -90,7 +90,7 @@ public class ClientesController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ClientesResponseDTO> buscarPorId(@PathVariable Long id) {
-        ClientesResponseDTO response = service.buscarPorId(id);
+        ClientesResponseDTO response = clientesService.buscarPorId(id);
         agregarLinks(response);
         return ResponseEntity.ok(response);
     }
@@ -102,7 +102,7 @@ public class ClientesController {
     })
     @GetMapping("/email/{email}")
     public ResponseEntity<ClientesResponseDTO> buscarPorEmail(@PathVariable String email) {
-        ClientesResponseDTO response = service.buscarPorEmail(email);
+        ClientesResponseDTO response = clientesService.buscarPorEmail(email);
         agregarLinks(response);
         return ResponseEntity.ok(response);
     }
@@ -114,7 +114,7 @@ public class ClientesController {
     })
     @GetMapping("/rut/{rut}")
     public ResponseEntity<ClientesResponseDTO> buscarPorRut(@PathVariable String rut) {
-        ClientesResponseDTO response = service.buscarPorRut(rut);
+        ClientesResponseDTO response = clientesService.buscarPorRut(rut);
         agregarLinks(response);
         return ResponseEntity.ok(response);
     }
@@ -127,7 +127,7 @@ public class ClientesController {
     @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente")
     @GetMapping
     public ResponseEntity<CollectionModel<ClientesResponseDTO>> listarTodos() {
-        List<ClientesResponseDTO> lista = service.listarTodos();
+        List<ClientesResponseDTO> lista = clientesService.listarTodos();
         lista.forEach(this::agregarLinks);
         return ResponseEntity.ok(CollectionModel.of(lista,
                 linkTo(methodOn(ClientesController.class).listarTodos()).withSelfRel()));
@@ -138,14 +138,14 @@ public class ClientesController {
     @GetMapping("/paginado")
     public ResponseEntity<Page<ClientesResponseDTO>> listarPaginado(
             @ParameterObject @PageableDefault(size = 20, sort = "nombreCompleto") Pageable pageable) {
-        return ResponseEntity.ok(service.listarPaginado(pageable));
+        return ResponseEntity.ok(clientesService.listarPaginado(pageable));
     }
 
     @Operation(summary = "Buscar clientes por nombre")
     @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente")
     @GetMapping("/buscar")
     public ResponseEntity<CollectionModel<ClientesResponseDTO>> listarPorNombre(@RequestParam String nombre) {
-        List<ClientesResponseDTO> lista = service.listarPorNombre(nombre);
+        List<ClientesResponseDTO> lista = clientesService.listarPorNombre(nombre);
         lista.forEach(this::agregarLinks);
         return ResponseEntity.ok(CollectionModel.of(lista,
                 linkTo(methodOn(ClientesController.class).listarPorNombre(nombre)).withSelfRel()));
@@ -155,7 +155,7 @@ public class ClientesController {
     @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente")
     @GetMapping("/activos")
     public ResponseEntity<CollectionModel<ClientesResponseDTO>> listarActivos(@RequestParam Boolean activo) {
-        List<ClientesResponseDTO> lista = service.listarActivos(activo);
+        List<ClientesResponseDTO> lista = clientesService.listarActivos(activo);
         lista.forEach(this::agregarLinks);
         return ResponseEntity.ok(CollectionModel.of(lista,
                 linkTo(methodOn(ClientesController.class).listarActivos(activo)).withSelfRel()));
@@ -167,7 +167,7 @@ public class ClientesController {
     public ResponseEntity<CollectionModel<ClientesResponseDTO>> listarPorFechaRegistro(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        List<ClientesResponseDTO> lista = service.listarPorFechaRegistro(desde, hasta);
+        List<ClientesResponseDTO> lista = clientesService.listarPorFechaRegistro(desde, hasta);
         lista.forEach(this::agregarLinks);
         return ResponseEntity.ok(CollectionModel.of(lista,
                 linkTo(methodOn(ClientesController.class).listarPorFechaRegistro(desde, hasta)).withSelfRel()));
@@ -181,7 +181,7 @@ public class ClientesController {
     @ApiResponse(responseCode = "200", description = "Conteo obtenido exitosamente")
     @GetMapping("/contar/activo")
     public ResponseEntity<Long> contarPorActivo(@RequestParam Boolean activo) {
-        return ResponseEntity.ok(service.contarPorActivo(activo));
+        return ResponseEntity.ok(clientesService.contarPorActivo(activo));
     }
 
     // ──────────────────────────────────────────────

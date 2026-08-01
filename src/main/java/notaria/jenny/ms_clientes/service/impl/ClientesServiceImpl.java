@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClientesServiceImpl implements ClientesService {
 
-    private final ClientesRepository ClientesRepository;
+    private final ClientesRepository clientesRepository;
 
     // ──────────────────────────────────────────────
     // CRUD
@@ -34,9 +34,9 @@ public class ClientesServiceImpl implements ClientesService {
         // Normaliza el RUT ("12345678-k" → "12345678-K") antes de comparar y guardar
         String rutNormalizado = RutUtil.normalizar(request.getRut());
 
-        if (ClientesRepository.existsByEmail(request.getEmail()))
+        if (clientesRepository.existsByEmail(request.getEmail()))
             throw new RecursoDuplicadoException("El email '" + request.getEmail() + "' ya está registrado");
-        if (ClientesRepository.existsByRut(rutNormalizado))
+        if (clientesRepository.existsByRut(rutNormalizado))
             throw new RecursoDuplicadoException("El RUT '" + rutNormalizado + "' ya está registrado");
 
         Clientes cliente = new Clientes();
@@ -49,7 +49,7 @@ public class ClientesServiceImpl implements ClientesService {
         cliente.setActivo(true);
         cliente.setFechaRegistro(LocalDate.now());
 
-        return toResponse(ClientesRepository.save(cliente));
+        return toResponse(clientesRepository.save(cliente));
     }
 
     @Override
@@ -58,14 +58,14 @@ public class ClientesServiceImpl implements ClientesService {
             Long id,
             ClientesUpdateDTO request
     ) {
-        Clientes cliente = ClientesRepository
+        Clientes cliente = clientesRepository
                 .findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con ID " + id + " no encontrado"));
 
         boolean emailCambiado = !cliente
                 .getEmail()
                 .equalsIgnoreCase(request.getEmail());
-        if (emailCambiado && ClientesRepository.existsByEmail(request.getEmail()))
+        if (emailCambiado && clientesRepository.existsByEmail(request.getEmail()))
             throw new RecursoDuplicadoException("El email '" + request.getEmail() + "' ya está en uso por otro cliente");
 
         cliente.setNombreCompleto(request.getNombreCompleto());
@@ -74,17 +74,17 @@ public class ClientesServiceImpl implements ClientesService {
         cliente.setDireccion(request.getDireccion());
         cliente.setFechaNacimiento(request.getFechaNacimiento());
 
-        return toResponse(ClientesRepository.save(cliente));
+        return toResponse(clientesRepository.save(cliente));
     }
 
     @Override
     @Transactional
     public void toggleActivo(Long id) {
-        Clientes cliente = ClientesRepository
+        Clientes cliente = clientesRepository
                 .findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con ID " + id + " no encontrado"));
         cliente.setActivo(!cliente.getActivo());
-        ClientesRepository.save(cliente);
+        clientesRepository.save(cliente);
     }
 
     // ──────────────────────────────────────────────
@@ -93,7 +93,7 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public ClientesResponseDTO buscarPorId(Long id) {
-        return ClientesRepository
+        return clientesRepository
                 .findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con ID " + id + " no encontrado"));
@@ -101,7 +101,7 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public ClientesResponseDTO buscarPorEmail(String email) {
-        return ClientesRepository
+        return clientesRepository
                 .findByEmail(email)
                 .map(this::toResponse)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con email '" + email + "' no encontrado"));
@@ -110,7 +110,7 @@ public class ClientesServiceImpl implements ClientesService {
     @Override
     public ClientesResponseDTO buscarPorRut(String rut) {
         String rutNormalizado = RutUtil.normalizar(rut);
-        return ClientesRepository
+        return clientesRepository
                 .findByRut(rutNormalizado)
                 .map(this::toResponse)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente con RUT '" + rutNormalizado +
@@ -123,7 +123,7 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public List<ClientesResponseDTO> listarTodos() {
-        return ClientesRepository
+        return clientesRepository
                 .findAllByOrderByNombreCompletoAsc()
                 .stream()
                 .map(this::toResponse)
@@ -132,14 +132,14 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public Page<ClientesResponseDTO> listarPaginado(Pageable pageable) {
-        return ClientesRepository
+        return clientesRepository
                 .findAll(pageable)
                 .map(this::toResponse);
     }
 
     @Override
     public List<ClientesResponseDTO> listarPorNombre(String nombre) {
-        return ClientesRepository
+        return clientesRepository
                 .findByNombreCompletoContainingIgnoreCase(nombre)
                 .stream()
                 .map(this::toResponse)
@@ -148,7 +148,7 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public List<ClientesResponseDTO> listarActivos(Boolean activo) {
-        return ClientesRepository
+        return clientesRepository
                 .findByActivo(activo)
                 .stream()
                 .map(this::toResponse)
@@ -164,7 +164,7 @@ public class ClientesServiceImpl implements ClientesService {
             throw new IllegalArgumentException(
                     "La fecha 'hasta' (" + hasta + ") no puede ser anterior a la fecha 'desde' (" + desde + ")");
 
-        return ClientesRepository
+        return clientesRepository
                 .findByFechaRegistroBetween(
                         desde,
                         hasta
@@ -180,7 +180,7 @@ public class ClientesServiceImpl implements ClientesService {
 
     @Override
     public long contarPorActivo(Boolean activo) {
-        return ClientesRepository.countByActivo(activo);
+        return clientesRepository.countByActivo(activo);
     }
 
     // ──────────────────────────────────────────────
