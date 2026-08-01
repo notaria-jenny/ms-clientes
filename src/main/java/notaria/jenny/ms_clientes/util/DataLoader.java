@@ -51,7 +51,7 @@ public class DataLoader implements CommandLineRunner {
 
         }
 
-        log.info(">> ms-clientes: Clientes generados con DataFaker exitosamente!", CANTIDAD);
+        log.info(">> ms-clientes: {} Clientes generados con DataFaker exitosamente!", CANTIDAD);
 
     }
 
