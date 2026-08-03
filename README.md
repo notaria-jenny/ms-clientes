@@ -4,14 +4,36 @@ Microservicio de gestión de clientes de la Notaría Jenny. Expone un CRUD REST 
 personas que solicitan servicios notariales, con validación de RUT chileno, cálculo
 automático de edad y documentación OpenAPI.
 
-Forma parte de un sistema de microservicios junto a `ms-administradores` y `APIGateway`.
-A diferencia de `ms-administradores`, este servicio no gestiona contraseñas ni roles:
-los clientes son registros administrados, no usuarios que inician sesión.
+A diferencia de `ms-administradores`, este servicio no gestiona contraseñas ni roles: los
+clientes son registros administrados, no usuarios que inician sesión.
+
+## Arquitectura
+
+```
+                       ┌──────────────────┐
+                       │    ms-eureka     │  :8761
+                       └─────────┬────────┘
+                                 │
+          ┌──────────────────────┼──────────────────────┐
+          │                      │                      │
+┌─────────┴────────┐   ┌─────────┴────────┐   ┌─────────┴────────┐
+│    APIGateway    │   │ms-administradores│   │   ms-clientes    │
+│      :8080       │   │      :8081       │   │      :8082       │
+└──────────────────┘   └─────────┬────────┘   └─────────┬────────┘
+                                 │                      │
+                                 ▼                      ▼
+                        db_administradores         db_clientes
+```
+
+Este servicio se registra en **ms-eureka** al arrancar, y el gateway lo resuelve por
+nombre (`lb://ms-clientes`). No conoce a `ms-administradores` ni necesita hacerlo: su base
+de datos y su dominio son independientes.
 
 ## Stack
 
-- Java 25 · Spring Boot 4.1.0
+- Java 25 · Spring Boot 4.0.7
 - Spring Data JPA · MySQL
+- Spring Cloud Netflix Eureka Client
 - Spring HATEOAS · springdoc-openapi 3.0.3 · Spring Boot Actuator
 - Lombok · DataFaker (datos de prueba)
 
@@ -19,19 +41,21 @@ los clientes son registros administrados, no usuarios que inician sesión.
 
 - JDK 25
 - MySQL en ejecución (la base se crea sola, ver más abajo)
+- `ms-eureka` corriendo en el puerto 8761
 - Maven (o el wrapper `./mvnw` incluido)
 
 ## Configuración
 
-La conexión se define por variables de entorno, con valores por defecto para desarrollo local:
+Todo se define por variables de entorno, con valores por defecto para desarrollo local:
 
-| Variable      | Por defecto                                                          |
-|---------------|----------------------------------------------------------------------|
+| Variable      | Por defecto                                                            |
+|---------------|------------------------------------------------------------------------|
 | `DB_URL`      | `jdbc:mysql://localhost:3306/db_clientes?createDatabaseIfNotExist=true` |
-| `DB_USER`     | `root`                                                               |
-| `DB_PASSWORD` | *(vacío)*                                                            |
+| `DB_USER`     | `root`                                                                 |
+| `DB_PASSWORD` | *(vacío)*                                                              |
+| `EUREKA_URI`  | `http://localhost:8761/eureka/`                                        |
 
-El servicio corre en el puerto **8082**.
+El servicio corre en el puerto **8082** y se registra en Eureka como `ms-clientes`.
 
 Dos decisiones de la configuración:
 
@@ -41,7 +65,7 @@ Dos decisiones de la configuración:
 
 ## Cómo levantarlo
 
-Local:
+Levanta primero `ms-eureka`, y después:
 
 ```bash
 ./mvnw spring-boot:run
@@ -63,17 +87,20 @@ tabla ya tiene registros, no hace nada.
 - OpenAPI JSON: http://localhost:8082/v3/api-docs
 - Health check: http://localhost:8082/actuator/health
 
+A través del gateway, la especificación también está disponible en
+http://localhost:8080/v3/api-docs/clientes
+
 ## Endpoints
 
 Ruta base: `/api/v2/clientes`
 
 ### CRUD
 
-| Método  | Ruta                  | Descripción                    |
-|---------|-----------------------|--------------------------------|
-| `POST`  | `/`                   | Crear cliente                  |
-| `PUT`   | `/{id}`               | Actualizar datos (sin el RUT)  |
-| `PATCH` | `/{id}/toggle-activo` | Activar o desactivar           |
+| Método  | Ruta                  | Descripción                   |
+|---------|-----------------------|-------------------------------|
+| `POST`  | `/`                   | Crear cliente                 |
+| `PUT`   | `/{id}`               | Actualizar datos (sin el RUT) |
+| `PATCH` | `/{id}/toggle-activo` | Activar o desactivar          |
 
 ### Búsquedas
 
@@ -85,31 +112,31 @@ Ruta base: `/api/v2/clientes`
 
 ### Listados
 
-| Método | Ruta                       | Descripción                     |
-|--------|----------------------------|---------------------------------|
-| `GET`  | `/`                        | Todos, ordenados por nombre     |
-| `GET`  | `/paginado?page=0&size=20` | Paginado y ordenable            |
-| `GET`  | `/buscar?nombre=`          | Filtrar por nombre (parcial)    |
-| `GET`  | `/activos?activo=true`     | Filtrar por estado              |
-| `GET`  | `/fecha?desde=&hasta=`     | Por rango de fecha de registro  |
-| `GET`  | `/contar/activo?activo=`   | Contar por estado               |
+| Método | Ruta                       | Descripción                    |
+|--------|----------------------------|--------------------------------|
+| `GET`  | `/`                        | Todos, ordenados por nombre    |
+| `GET`  | `/paginado?page=0&size=20` | Paginado y ordenable           |
+| `GET`  | `/buscar?nombre=`          | Filtrar por nombre (parcial)   |
+| `GET`  | `/activos?activo=true`     | Filtrar por estado             |
+| `GET`  | `/fecha?desde=&hasta=`     | Por rango de fecha de registro |
+| `GET`  | `/contar/activo?activo=`   | Contar por estado              |
 
 Las respuestas individuales incluyen enlaces HATEOAS (`self`, `toggle-activo`, `todos`).
 
 ## Modelo
 
-| Campo             | Tipo        | Notas                                     |
-|-------------------|-------------|-------------------------------------------|
-| `idCliente`       | `Long`      | Autogenerado                              |
-| `nombreCompleto`  | `String`    | Máx. 200                                  |
-| `rut`             | `String`    | Único, validado con dígito verificador    |
-| `email`           | `String`    | Único, formato validado                   |
-| `telefono`        | `String`    | Máx. 20                                   |
-| `direccion`       | `String`    | Máx. 255                                  |
-| `fechaNacimiento` | `LocalDate` | Debe ser anterior a hoy (`@Past`)         |
-| `activo`          | `Boolean`   | `true` al crear                           |
-| `fechaRegistro`   | `LocalDate` | Asignada por el sistema                   |
-| `edad`            | `Integer`   | **Calculada**, no se almacena             |
+| Campo             | Tipo        | Notas                                  |
+|-------------------|-------------|----------------------------------------|
+| `idCliente`       | `Long`      | Autogenerado                           |
+| `nombreCompleto`  | `String`    | Máx. 200                               |
+| `rut`             | `String`    | Único, validado con dígito verificador |
+| `email`           | `String`    | Único, formato validado                |
+| `telefono`        | `String`    | Máx. 20                                |
+| `direccion`       | `String`    | Máx. 255                               |
+| `fechaNacimiento` | `LocalDate` | Debe ser anterior a hoy (`@Past`)      |
+| `activo`          | `Boolean`   | `true` al crear                        |
+| `fechaRegistro`   | `LocalDate` | Asignada por el sistema                |
+| `edad`            | `Integer`   | **Calculada**, no se almacena          |
 
 La edad se deriva de `fechaNacimiento` con `Period.between` y viaja en la respuesta como
 campo `@Transient`. Se calcula al momento de consultar, así que nunca queda desactualizada
