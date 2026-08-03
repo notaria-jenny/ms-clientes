@@ -127,7 +127,7 @@ mayúscula**: `12345678-5`, `9876543-K`.
   responsabilidad del frontend.
 - El RUT es **inmutable**: identifica a la persona, por lo que el `PUT` no permite modificarlo.
 
-## Manejo de errores
+## Manejo de erroress
 
 Todas las respuestas de error comparten el mismo formato (`timestamp`, `status`, `error`):
 
